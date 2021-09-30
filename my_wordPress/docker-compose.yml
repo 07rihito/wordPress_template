@@ -1,0 +1,36 @@
+version: "3"
+services:
+  wordpressMysql:
+    image: mysql:8.0
+    networks:
+      - wordpressNet1
+    volumes:
+      - ./mysqlVol1:/var/lib/mysql
+    restart: always
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password # mysql:5.7の場合は不要
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPass
+      MYSQL_DATABASE: wordpressDb
+      MYSQL_USER: wordpressUser1
+      MYSQL_PASSWORD: User1
+  wordpress:
+    depends_on:
+      - wordpressMysql
+    image: wordpress
+    networks:
+      - wordpressNet1
+    volumes:
+      - ./wordpressVol1:/var/www/html
+    ports:
+      - 8080:80
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: wordpressMysql
+      WORDPRESS_DB_NAME: wordpressDb
+      WORDPRESS_DB_USER: wordpressUser1
+      WORDPRESS_DB_PASSWORD: User1
+networks:
+  wordpressNet1:
+# volumes:
+#     mysqlVol1:
+#     wordpressVol1:
