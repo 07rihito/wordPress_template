@@ -1,11 +1,14 @@
 version: "3"
 services:
   wordpressMysql:
-    image: mysql:8.0
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    image: mysql_test
     networks:
       - wordpressNet1
     volumes:
-      - ./db/mysqlVol1:/var/lib/mysql
+      - ./mysql/mysqlVol1:/var/lib/mysql
     restart: always
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password # mysql:5.7の場合は不要
     environment:
@@ -20,7 +23,7 @@ services:
     networks:
       - wordpressNet1
     volumes:
-      - ./app/wordpressVol1:/var/www/html
+      - ./wordpress/wordpressVol1:/var/www/html
     ports:
       - 8080:80
     restart: always
