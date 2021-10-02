@@ -42,7 +42,7 @@ services:
     networks:
       - my_network
     volumes:
-      - ./wordpress/wordpressVol:/var/www/html
+      - ./wordpress/data:/var/www/html
 #    ports:
 #      - 8080:80
     restart: always
