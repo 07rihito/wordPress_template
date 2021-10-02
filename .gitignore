@@ -1,5 +1,6 @@
 .DS_Store
 *.swp
 
-mysqlVol1/
-wordpressVol1/
+certs/
+wordpress/
+db/

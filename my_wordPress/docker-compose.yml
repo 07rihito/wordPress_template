@@ -1,39 +1,75 @@
-version: "3"
+version: '3'
 services:
-  wordpressMysql:
-    build:
-      context: ./mysql
-      dockerfile: Dockerfile
-    image: mysql_test
-    networks:
-      - wordpressNet1
-    volumes:
-      - ./mysql/mysqlVol1:/var/lib/mysql
+  mysql:  # mysql
+# buildとimageが指定されるとビルドが優先的に実行されて, image はその構成に使われる
+#    build:
+#      context: ./db  # Dockerfileの場所
+#      dockerfile: Dockerfile
+    image: mysql:8.0
+    container_name: my_db_container
+#    hostname: my_db_host
     restart: always
-    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password # mysql:5.7の場合は不要
+#    privileged: true
     environment:
       MYSQL_ROOT_PASSWORD: RootPass
-      MYSQL_DATABASE: wordpressDb
-      MYSQL_USER: wordpressUser1
+      MYSQL_DATABASE: testDb
+      MYSQL_USER: user1
       MYSQL_PASSWORD: User1
-  wordpress:
-    depends_on:
-      - wordpressMysql
-    image: wordpress
-    networks:
-      - wordpressNet1
+#      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  # optional
+#      MYSQL_RANDOM_ROOT_PASSWORD: "yes"  # optional
+#      MYSQL_ONETIME_PASSWORD: "yes"  # optional (MySQL 5.6 or above)
+      TZ: 'Asia/Tokyo'
+#    ports:
+#      - 3306:3306
     volumes:
-      - ./wordpress/wordpressVol1:/var/www/html
-    ports:
-      - 8080:80
+      - ./mysql/data:/var/lib/mysql
+#      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+#      - ./db/init:/docker-entrypoint-initdb.d
+      - ./mysql/log:/var/log/mysql
+    networks:
+      - my_network
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password # mysql:5.7の場合は不要
+  wordpress:
+#    build:
+#      context: ./wordpress
+#      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+#    links:
+#      - db
+    image: wordpress
+    container_name: my_wordpress_container
+    networks:
+      - my_network
+    volumes:
+      - ./wordpress/wordpressVol:/var/www/html
+#    ports:
+#      - 8080:80
     restart: always
     environment:
-      WORDPRESS_DB_HOST: wordpressMysql
-      WORDPRESS_DB_NAME: wordpressDb
-      WORDPRESS_DB_USER: wordpressUser1
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_NAME: testDb
+      WORDPRESS_DB_USER: user1
       WORDPRESS_DB_PASSWORD: User1
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - wordpress
+#    links:
+#      - wordpress
+    restart: always
+    environment:
+      DOMAINS: 'localhost -> http://wordpress:80,  onaona.local -> http://wordpress:80'
+      STAGE: local
+    volumes:
+      - ./certs:/var/lib/https-portal
+    networks:
+      - my_network
 networks:
-  wordpressNet1:
+  my_network:
 # volumes:
 #     mysqlVol1:
 #     wordpressVol1:
